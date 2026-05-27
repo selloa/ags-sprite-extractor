@@ -1,5 +1,6 @@
 # AGS Sprite Extractor
 
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](CHANGELOG.md)
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -84,6 +85,7 @@ python sprite_extractor.py acsprset.spr --range "1000-1999" -q
 - `-o, --output`: Output directory (default: extracted_sprites)
 - `-q, --quiet`: Quiet mode (less verbose output)
 - `--range`: Extract sprite range (e.g., "100-200" or "100-200,300-400")
+- `--version`: Show version and exit
 
 ## 📊 Performance
 

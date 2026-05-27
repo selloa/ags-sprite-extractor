@@ -14,6 +14,8 @@ from typing import Optional, Tuple, List
 from PIL import Image
 import argparse
 
+__version__ = "1.1.0"
+
 class AGSSpriteFile:
     """AGS Sprite File Reader"""
     
@@ -405,13 +407,18 @@ class AGSSpriteFile:
                 else:
                     r = g = b = 0
                     a = 255
-            elif fmt == 33:  # fmt_8888 (32-bit RGBA)
+            elif fmt == 33:  # fmt_8888 (32-bit BGRA, AGS A8R8G8B8 palette entries)
                 pal_offset = palette_index * 4
                 if pal_offset + 3 < len(palette_data):
-                    r = palette_data[pal_offset]
+                    b = palette_data[pal_offset]
                     g = palette_data[pal_offset + 1]
-                    b = palette_data[pal_offset + 2]
+                    r = palette_data[pal_offset + 2]
                     a = palette_data[pal_offset + 3]
+                    # AGS: alpha=0 in palette means opaque; only magenta is transparent
+                    if a == 0 and r == 255 and g == 0 and b == 255:
+                        pass
+                    elif a == 0:
+                        a = 255
                 else:
                     r = g = b = a = 0
             elif fmt == 34:  # fmt_565 (16-bit RGB565)
@@ -585,6 +592,7 @@ def main():
     parser.add_argument('-o', '--output', default='extracted_sprites', help='Output directory')
     parser.add_argument('-q', '--quiet', action='store_true', help='Quiet mode (less verbose output)')
     parser.add_argument('--range', help='Extract sprite range (e.g., "100-200" or "100-200,300-400")')
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     
     args = parser.parse_args()
     

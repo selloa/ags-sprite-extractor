@@ -60,3 +60,18 @@ agsutils/
 *_analysis.json
 *_report.json
 *_categories.json
+
+# Test files
+source/
+*.spr
+*.crm
+*.dta
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.ico
+*.svg
