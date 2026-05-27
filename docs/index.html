@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AGS Sprite Extractor</title>
+  <meta name="description" content="Extract PNG sprites from Adventure Game Studio .spr files. Fast, free, for modders and fan games.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #161a16;
+      --bg-glow: rgba(96, 147, 76, 0.12);
+      --card: rgba(28, 32, 28, 0.92);
+      --card-border: rgba(96, 147, 76, 0.2);
+      --accent: #6fa85a;
+      --accent-hover: #8cbf72;
+      --accent-dim: rgba(96, 147, 76, 0.25);
+      --text: rgba(255, 255, 255, 0.82);
+      --text-bright: #fff;
+      --muted: rgba(255, 255, 255, 0.45);
+      --code-bg: rgba(0, 0, 0, 0.35);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse 80% 60% at 50% 0%, var(--bg-glow), transparent 70%);
+    }
+
+    .page {
+      max-width: 42rem;
+      margin: 0 auto;
+      animation: cardIn 0.45s ease-out both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.75rem 1.75rem 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    #google_translate_element {
+      opacity: 0.55;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    #google_translate_element:hover { opacity: 1; }
+    #google_translate_element select {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 0.25rem 0.45rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.75rem;
+    }
+    .goog-te-gadget { font-size: 0 !important; color: transparent !important; }
+    .goog-te-gadget select { font-size: 0.75rem !important; color: var(--text) !important; }
+    .goog-te-gadget a { display: none !important; }
+
+    header { margin-bottom: 1.5rem; }
+
+    h1 {
+      font-family: 'Cabin Sketch', cursive;
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      margin-bottom: 0.35rem;
+    }
+
+    .tagline {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .version-pill {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 500;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(111, 168, 90, 0.15);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent-hover);
+      letter-spacing: 0.5px;
+    }
+
+    .intro {
+      font-size: 0.88rem;
+      color: var(--text);
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    section { margin-bottom: 1.75rem; }
+
+    h2 {
+      font-family: 'Cabin Sketch', cursive;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-bright);
+      margin-bottom: 0.65rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--accent-dim);
+    }
+
+    p { margin-bottom: 0.5rem; }
+    p:last-child { margin-bottom: 0; }
+
+    .steps {
+      list-style: none;
+      counter-reset: step;
+    }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 1.75rem;
+      margin-bottom: 0.45rem;
+      font-size: 0.85rem;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      width: 1.25rem;
+      height: 1.25rem;
+      line-height: 1.25rem;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: rgba(111, 168, 90, 0.12);
+      border-radius: 50%;
+    }
+
+    .cmd-block {
+      margin-bottom: 0.75rem;
+    }
+    .cmd-block:last-child { margin-bottom: 0; }
+    .cmd-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    pre {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      padding: 0.65rem 0.85rem;
+      background: var(--code-bg);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+      overflow-x: auto;
+      color: var(--text-bright);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .tips {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .tips li { margin-bottom: 0.35rem; margin-left: 1rem; }
+
+    .donate-block {
+      padding-top: 0.25rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .donate-block > p { font-size: 0.8rem; color: var(--muted); }
+
+    .donate-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .paypal-cat {
+      width: 160px;
+      height: 160px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 3px solid var(--accent);
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      display: none;
+    }
+    .paypal-cat.visible { display: block; }
+    .paypal-cat:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 0 6px 20px rgba(111, 168, 90, 0.35);
+    }
+    .paypal-cat.loading {
+      opacity: 0.5;
+      transform: scale(0.95);
+      animation: catPulse 1s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes catPulse {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 0.75; }
+    }
+
+    .cat-unavailable {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-style: italic;
+      display: none;
+    }
+    .cat-unavailable.visible { display: block; }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+    }
+
+    .btn-donate,
+    .btn-secondary {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+      border: none;
+    }
+
+    .btn-donate {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-donate:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 14px rgba(111, 168, 90, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent-hover);
+      border: 1px solid var(--accent-dim);
+    }
+    .btn-secondary:hover {
+      background: rgba(111, 168, 90, 0.1);
+      border-color: var(--accent);
+    }
+
+    .links {
+      text-align: center;
+      font-size: 0.8rem;
+      margin-bottom: 1.25rem;
+    }
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .links a:hover { color: var(--accent-hover); text-decoration: underline; }
+    .links .sep { color: var(--muted); margin: 0 0.35rem; }
+
+    footer {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { color: var(--accent-hover); }
+
+    @media (max-width: 480px) {
+      body { padding: 1rem 0.65rem 2rem; }
+      .card { padding: 1.25rem 1.1rem; }
+      h1 { font-size: 1.5rem; }
+      .card-top { flex-direction: column-reverse; align-items: stretch; }
+      #google_translate_element { align-self: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page">
+    <article class="card">
+      <div class="card-top">
+        <div id="google_translate_element"></div>
+      </div>
+
+      <header>
+        <h1>AGS Sprite Extractor</h1>
+        <p class="tagline">Pull PNG sprites from Adventure Game Studio <code>.spr</code> files</p>
+        <span class="version-pill">v1.1.0</span>
+      </header>
+
+      <p class="intro">
+        A small command-line tool for modders, fan-game makers, and anyone who wants game graphics out of an AGS project.
+        Fast, free, and open source.
+      </p>
+
+      <section>
+        <h2>Setup</h2>
+        <p>You need <strong>Python 3.6+</strong> and <strong>Pillow</strong>.</p>
+        <div class="cmd-block">
+          <div class="cmd-label">Install</div>
+          <pre>pip install Pillow</pre>
+        </div>
+        <p style="margin-top:0.75rem;font-size:0.85rem;">
+          Download this repo from
+          <a href="https://github.com/selloa/ags-sprite-extractor" style="color:var(--accent);">GitHub</a>
+          and open a terminal in that folder.
+        </p>
+      </section>
+
+      <section>
+        <h2>How to use</h2>
+        <ol class="steps">
+          <li>Find your game’s sprite file — usually <code>acsprset.spr</code> in the game folder.</li>
+          <li>Open Command Prompt or Terminal in the folder with <code>sprite_extractor.py</code>.</li>
+          <li>Run one of the commands below (point it at your <code>.spr</code> file).</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Commands</h2>
+
+        <div class="cmd-block">
+          <div class="cmd-label">List all sprites</div>
+          <pre>python sprite_extractor.py acsprset.spr -l</pre>
+        </div>
+
+        <div class="cmd-block">
+          <div class="cmd-label">Extract one sprite</div>
+          <pre>python sprite_extractor.py acsprset.spr -e 3240</pre>
+        </div>
+
+        <div class="cmd-block">
+          <div class="cmd-label">Extract a range</div>
+          <pre>python sprite_extractor.py acsprset.spr --range "1000-1999"</pre>
+        </div>
+
+        <div class="cmd-block">
+          <div class="cmd-label">Extract everything</div>
+          <pre>python sprite_extractor.py acsprset.spr -a</pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Tips</h2>
+        <ul class="tips">
+          <li>Sprite numbers start at <strong>0</strong> (not 1).</li>
+          <li>PNG files are saved as <code>sprite_03240.png</code> in <code>extracted_sprites/</code> by default.</li>
+          <li>Use <code>-o my_folder</code> to pick another output folder.</li>
+        </ul>
+      </section>
+
+      <section class="donate-block">
+        <h2>Support this tool</h2>
+        <p>Optional donation — click the cat for a new one.</p>
+        <div class="donate-actions">
+          <img id="paypalCat" class="paypal-cat" alt="Random cat" title="Click for another cat">
+          <p id="catUnavailable" class="cat-unavailable">Cat unavailable right now — try again later.</p>
+          <div class="btn-row">
+            <a href="https://www.paypal.com/paypalme/moincello" class="btn-donate" target="_blank" rel="noopener noreferrer">PayPal donate</a>
+            <button type="button" id="downloadCatBtn" class="btn-secondary">Download cat</button>
+          </div>
+        </div>
+      </section>
+
+      <nav class="links" aria-label="Project links">
+        <a href="https://github.com/selloa/ags-sprite-extractor">GitHub</a>
+        <span class="sep">·</span>
+        <a href="https://github.com/selloa/ags-sprite-extractor/blob/master/README.md">Full docs</a>
+        <span class="sep">·</span>
+        <a href="https://github.com/selloa/ags-sprite-extractor/blob/master/CHANGELOG.md">Changelog</a>
+      </nav>
+
+      <footer>
+        <p>MIT License · <a href="https://github.com/selloa/ags-sprite-extractor">ags-sprite-extractor</a></p>
+        <p style="margin-top:0.4rem;">selloa · 2026</p>
+      </footer>
+    </article>
+  </div>
+
+  <script>
+    async function fetchRandomCat() {
+      try {
+        const response = await fetch('https://api.thecatapi.com/v1/images/search');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        return data[0] && data[0].url ? data[0].url : null;
+      } catch (err) {
+        console.error('Error fetching cat image:', err);
+        return null;
+      }
+    }
+
+    function initCat() {
+      const catImg = document.getElementById('paypalCat');
+      const unavailable = document.getElementById('catUnavailable');
+      const downloadBtn = document.getElementById('downloadCatBtn');
+      if (!catImg) return;
+
+      function showUnavailable() {
+        catImg.classList.remove('visible');
+        unavailable.classList.add('visible');
+      }
+
+      function setCatUrl(url) {
+        if (!url) {
+          showUnavailable();
+          return;
+        }
+        catImg.src = url;
+        catImg.classList.add('visible');
+        unavailable.classList.remove('visible');
+      }
+
+      catImg.addEventListener('click', function () {
+        catImg.classList.add('loading');
+        fetchRandomCat().then(function (url) {
+          setCatUrl(url);
+          catImg.classList.remove('loading');
+        });
+      });
+
+      catImg.addEventListener('mouseenter', function () {
+        if (!catImg.classList.contains('loading')) {
+          catImg.style.transform = 'scale(1.05) rotate(2deg)';
+        }
+      });
+      catImg.addEventListener('mouseleave', function () {
+        catImg.style.transform = '';
+      });
+
+      downloadBtn.addEventListener('click', function () {
+        if (!catImg.src || !catImg.classList.contains('visible')) return;
+        try {
+          const link = document.createElement('a');
+          link.href = catImg.src;
+          const ts = new Date().toISOString().replace(/[:.]/g, '-');
+          link.download = 'cat-' + ts + '.jpg';
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (err) {
+          window.open(catImg.src, '_blank');
+        }
+      });
+
+      fetchRandomCat().then(setCatUrl);
+    }
+
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {
+          pageLanguage: 'en',
+          includedLanguages: 'en,fr,it,de,es',
+          layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL
+        },
+        'google_translate_element'
+      );
+    }
+
+    initCat();
+  </script>
+  <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

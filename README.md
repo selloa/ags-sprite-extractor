@@ -1,5 +1,7 @@
 # AGS Sprite Extractor
 
+**Homepage:** https://selloa.github.io/ags-sprite-extractor/
+
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](CHANGELOG.md)
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -127,3 +129,7 @@ The tool supports AGS sprite file formats:
 - **Palette Support**: 24-bit RGB, 32-bit RGBA, 16-bit RGB565
 - **Color Depths**: 8-bit indexed, 16-bit RGB565, 24-bit RGB, 32-bit RGBA
 - **Optimizations**: Batch processing, reduced I/O operations, memory efficiency
+
+---
+
+*Optional:* [support via PayPal](https://www.paypal.com/paypalme/moincello) — always free to use, donations welcome.
