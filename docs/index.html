@@ -114,6 +114,43 @@
       letter-spacing: 0.5px;
     }
 
+    .download-block {
+      text-align: center;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .btn-download {
+      display: inline-block;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 0.7rem 1.6rem;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 12px rgba(111, 168, 90, 0.25);
+    }
+    .btn-download:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(111, 168, 90, 0.4);
+    }
+
+    .download-hint {
+      margin-top: 0.55rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .download-hint a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .download-hint a:hover { color: var(--accent-hover); text-decoration: underline; }
+
     .intro {
       font-size: 0.88rem;
       color: var(--text);
@@ -327,13 +364,20 @@
       <header>
         <h1>AGS Sprite Extractor</h1>
         <p class="tagline">Pull PNG sprites from Adventure Game Studio <code>.spr</code> files</p>
-        <span class="version-pill">v1.1.0</span>
+        <span class="version-pill" id="versionPill">…</span>
       </header>
 
       <p class="intro">
         A small command-line tool for modders, fan-game makers, and anyone who wants game graphics out of an AGS project.
         Fast, free, and open source.
       </p>
+
+      <div class="download-block">
+        <a id="downloadBtn" class="btn-download"
+           href="https://github.com/selloa/ags-sprite-extractor/archive/refs/heads/master.zip"
+           download>Download ZIP</a>
+        <p class="download-hint" id="downloadHint">Unzip, then run with Python — needs Pillow (see below).</p>
+      </div>
 
       <section>
         <h2>Setup</h2>
@@ -342,19 +386,14 @@
           <div class="cmd-label">Install</div>
           <pre>pip install Pillow</pre>
         </div>
-        <p style="margin-top:0.75rem;font-size:0.85rem;">
-          Download this repo from
-          <a href="https://github.com/selloa/ags-sprite-extractor" style="color:var(--accent);">GitHub</a>
-          and open a terminal in that folder.
-        </p>
       </section>
 
       <section>
         <h2>How to use</h2>
         <ol class="steps">
+          <li>Download the ZIP above and unzip it anywhere you like.</li>
           <li>Find your game’s sprite file — usually <code>acsprset.spr</code> in the game folder.</li>
-          <li>Open Command Prompt or Terminal in the folder with <code>sprite_extractor.py</code>.</li>
-          <li>Run one of the commands below (point it at your <code>.spr</code> file).</li>
+          <li>Open Command Prompt or Terminal in the folder with <code>sprite_extractor.py</code> and run a command below.</li>
         </ol>
       </section>
 
@@ -420,6 +459,36 @@
   </div>
 
   <script>
+    var REPO = 'selloa/ags-sprite-extractor';
+    var FALLBACK_ZIP = 'https://github.com/selloa/ags-sprite-extractor/archive/refs/heads/master.zip';
+
+    async function initDownload() {
+      var btn = document.getElementById('downloadBtn');
+      var versionPill = document.getElementById('versionPill');
+      var hint = document.getElementById('downloadHint');
+      if (!btn) return;
+
+      btn.href = FALLBACK_ZIP;
+
+      try {
+        var res = await fetch('https://api.github.com/repos/' + REPO + '/releases/latest');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        if (data.zipball_url) btn.href = data.zipball_url;
+        if (data.tag_name) {
+          if (versionPill) versionPill.textContent = data.tag_name;
+          btn.textContent = 'Download ' + data.tag_name;
+        }
+        if (hint && data.html_url) {
+          hint.innerHTML = 'Latest release ZIP · <a href="' + data.html_url + '">release notes</a> · unzip, then <code>pip install Pillow</code>';
+        }
+      } catch (err) {
+        console.warn('Could not fetch latest release, using master ZIP:', err);
+        if (versionPill) versionPill.textContent = 'master';
+        if (hint) hint.textContent = 'ZIP from main branch · unzip, then pip install Pillow';
+      }
+    }
+
     async function fetchRandomCat() {
       try {
         const response = await fetch('https://api.thecatapi.com/v1/images/search');
@@ -500,6 +569,7 @@
       );
     }
 
+    initDownload();
     initCat();
   </script>
   <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
